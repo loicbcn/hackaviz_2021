@@ -68,7 +68,6 @@ $(function(){
         format: new ol.format.GeoJSON(),
       }),
       style: function(feature) { 
-      console.log(view.getZoom());
         if( view.getZoom() > 12) {
             qpv_lab_style.getText().setText(feature.get('nom_qp'));
             return [qpvstyle, qpv_lab_style];
