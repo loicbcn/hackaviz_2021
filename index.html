@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Hackaviz 2021, comparer les quartiers prioritaires d'Occitanie.</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.7.0/css/ol.css" type="text/css">
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.7.0/build/ol.js"></script>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol-ext@3.2.6/dist/ol-ext.min.css" type="text/css">
+    <script src="https://cdn.jsdelivr.net/npm/ol-ext@3.2.6/dist/ol-ext.min.js"></script>
+    <style>
+
+    #choixdept {height:100%;}
+    #choixdept .highcharts-drillup-button {display:none;}
+
+    
+    #map{
+        position:relative;
+        min-height: 0; /* Let the content overflow */
+        flex: 1; /* Fill the available space */
+        height:100%;
+    }
+    
+    #polar{height:100%}
+    
+    #maplayers{position:absolute; z-index:10; bottom:4px; right:4px; border: 1px solid #000; padding: 4px; background-color: rgba(255,255,255,0.8)}
+    #maplayers > div {display:flex; align-items:center; cursor:pointer; }
+    .leg_communes { width:15px; height:10px; border:2px solid #000000; }
+    .leg_qp { width:15px; height:10px; border:2px solid #ff0000; }
+    .leg_bdortho{ width:15px; height:10px; background-color: #e1e1e1; }
+    .leg_plan{ width:15px; height:10px; background-color:#e1e1e1; }
+    
+    .leg_label {font-size: .7rem; margin:0 0 0 4px; color:#000000; }
+    .desactiv .leg_label {color:#e1e1e1;}
+
+    .hackaviz_box { background-color: rgba(255,255,255,0.3); padding:.2rem; }
+    .hackaviz_box span{ font-weight: bold; font-size: 2rem; text-shadow: -1px -1px 0px #000, 1px 1px 0px #000; letter-spacing: 1;}
+    .hackaviz_box span.CK_1 {text-shadow:none;}
+    .CK_1 { color: #000; }
+    .CK_2 { color: #e84e1b; }
+    .CK_3 { color: #f1e3a0; }
+    .CK_4 { color: #ffffff; }
+    .CK_5 { color: #009ee2; }
+    .CK_6 { color: #009540; }
+    </style>
+
+    <title>Hello, world!</title>
+  </head>
+  <body>
+    <header class="p-3 bg-dark text-white">
+    <div class="container-fluid">
+        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+            <h1 class="h3 me-lg-auto">Comparer les quartiers prioritaires (QP) d' Occitanie</h1>
+            <div class="hackaviz_box">
+                <span class="CK_1">#</span><span class="CK_2">H</span><span class="CK_3">ACKA</span><span class="CK_2">V</span><span class="CK_3">IZ</span><span class="CK_4">_2</span><span class="CK_5">0</span><span class="CK_4">2</span><span class="CK_6">1</span>
+            </div>
+
+        </div>
+        </div>
+    </header>
+  
+    <div class="container-fluid">
+        <div class="row py-3 gx-2">
+            <div class="col" id="listes_sel">
+                <div class="btn-group" id="sel_dep">
+                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle disabled" data-bs-toggle="dropdown" aria-expanded="false">
+                    Départements
+                        <span id="badge_dep" class="badge bg-dark visually-hidden"></span>
+                    </button>
+                    <ul class="dropdown-menu"></ul>
+                </div>      
+                <div class="btn-group" id="sel_com">
+                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle disabled" data-bs-toggle="dropdown" aria-expanded="false">
+                    Communes
+                        <span id="badge_com" class="badge bg-dark visually-hidden"></span>
+                    </button>
+                    <ul class="dropdown-menu"></ul>
+                </div>
+                <div class="btn-group" id="sel_qpv">
+                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle disabled" data-bs-toggle="dropdown" aria-expanded="false">
+                    QPV
+                    <span id="badge_qpv" class="badge bg-dark visually-hidden"></span>
+                    </button>
+                    <ul class="dropdown-menu"></ul>
+                </div>                  
+            
+            
+            </div>
+        </div>
+        
+        <div class="row gx-2">
+            <div class="col-4">
+                <figure class="highcharts-figure border">
+                    <div id="choixdept"></div>
+                </figure>
+            </div>
+            <div class="col-5">
+                <div class="border" id="polar"></div>
+            </div>
+            
+            <div class="col-3">
+                <div id="map" class="border">
+                    <div id="maplayers">
+                        <div data-layer="qpv">
+                            <span class="leg_qp"></span><span class="leg_label">Quartiers prioritaires</span>
+                        </div>
+                        <div data-layer="communesqpv">
+                            <span class="leg_communes"></span><span class="leg_label">Communes</span>
+                        </div>
+                        <div data-layer="bdortho" class="desactiv">
+                            <span class="leg_bdortho"></span><span class="leg_label">Photo aérienne</span>
+                        </div>
+                        <div data-layer="planignv2">
+                            <span class="leg_plan"></span><span class="leg_label">Plan IGN</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row gx-4">
+            <div class="col-4 py-3">
+                <p>Population vivant dans les quartiers priopritaires, par zone géographique.</p>
+                <p>Ce graphique sert aussi de <strong>menu de navigation</strong>. En cliquant sur les zones géographiques (département, commune ou QP), celles-ci s'ajoutent dans les listes déroulantes du haut de la page. 
+                Pour supprimer une zone géographique de la sélection, il suffit de cliquer sur son nom dans une des listes déroulantes.
+                </p>
+                <p>Enfin, en cliquant sur un des boutons, les indicateurs correspondants des zones listées sous celui-ci s'affichent.</p>
+                <p></p>
+            </div>
+            <div class="col-5 py-3">
+                <p>6 indicateurs qui fournissent un aperçu des situations démographiques et économiques des quatiers prioritaires.</p>
+                <p>Les zones géographiques sélectionnées apparaissent dans la légende qui permet d'activer ou de désactiver la représentation des données dans le graphique.
+                </p>
+            </div>
+            
+            <div class="col-3 py-3">
+                <p>Localisation cartographique des zones sélectionnées.</p>
+                <p>Il est possible d'activer ou de désactiver les couches de la carte en cliquant dans la légende.</p>
+            </div>
+        </div>
+
+        <footer class="d-flex flex-wrap justify-content-between align-items-start py-3 my-4 border-top">
+            <div class="col-md-4 d-flex align-items-center">
+                <span class="text-muted">Page réalisée dans le cadre du <a href="http://toulouse-dataviz.fr/hackaviz-2021">hackaviz-2021</a></span>
+            </div>
+
+            <ul class="nav col-md-4 justify-content-between list-unstyled d-flex">
+                <li class="ms-3">Sources des données: <ul class="list-unstyled"><li> - IGN</li><li> - Hackaviz</li></ul></li>
+                <li class="ms-3">Outils utilisés: <ul class="list-unstyled"><li> - QGIS</li><li> - Postgre/gis</li><li> - Highcharts.js</li><li> - OpenLayers</li><li>- jQuery</li><li>- Bootstrap</li>
+            </ul>
+        </footer>
+
+    </div>
+
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
+    <script src="https://code.highcharts.com/9.2.2/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/sunburst.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/parallel-coordinates.js"></script>
+    
+    
+    
+    <script src="js/script.js"></script>
+  </body>
+</html>
